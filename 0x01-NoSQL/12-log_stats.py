@@ -1,23 +1,48 @@
 #!/usr/bin/env python3
+"""
+Script to provide statistics about Nginx logs stored in MongoDB
+"""
 
-from pymongo import MongoClient
+import pymongo
 
-def print_nginx_request_logs(nginx_collection):
-    '''Prints stats about Nginx request logs.'''
-    total_logs = nginx_collection.count_documents({})
+def connect_db():
+    """Connect to MongoDB and return the connection"""
+    client = pymongo.MongoClient("mongodb://localhost:27017/")
+    db = client.logs
+    collection = db.nginx
+    return collection
+
+def count_logs(collection):
+    """Count the number of logs"""
+    return collection.count_documents({})
+
+def count_methods(collection):
+    """Count the number of logs for each method"""
+    methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+    method_counts = {method: collection.count_documents({"method": method}) for method in methods}
+    return method_counts
+
+def count_status_check(collection):
+    """Count the number of logs with method GET and path /status"""
+    return collection.count_documents({"method": "GET", "path": "/status"})
+
+def main():
+    """Main function"""
+    collection = connect_db()
+    
+    # Count total logs
+    total_logs = count_logs(collection)
     print(f"{total_logs} logs")
+    
+    # Count methods
     print("Methods:")
-    methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
-    for method in methods:
-        req_count = nginx_collection.count_documents({'method': method})
-        print(f"\tmethod {method}: {req_count}")
-    status_checks_count = nginx_collection.count_documents({'method': 'GET', 'path': '/status'})
-    print(f"{status_checks_count} status check")
+    method_counts = count_methods(collection)
+    for method, count in method_counts.items():
+        print(f"\tmethod {method}: {count}")
 
-def run():
-    '''Provides some stats about Nginx logs stored in MongoDB.'''
-    client = MongoClient('mongodb://127.0.0.1:27017')
-    print_nginx_request_logs(client.logs.nginx)
+    # Count status check
+    status_check_count = count_status_check(collection)
+    print(f"{status_check_count} status check")
 
-if __name__ == '__main__':
-    run()
+if __name__ == "__main__":
+    main()
