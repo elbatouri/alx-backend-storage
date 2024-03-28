@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-'''Module for fetching web page content with caching and tracking.'''
-
+'''A module for fetching web page content with caching and tracking.'''
 import redis
 import requests
 
@@ -18,7 +17,7 @@ def data_cacher(method):
         if result:
             return result.decode('utf-8')
         result = method(url)
-        redis_store.set(key_result, result, ex=10)
+        redis_store.setex(key_result, 10, result)
         return result
     return invoker
 
@@ -27,6 +26,8 @@ def data_cacher(method):
 def get_page(url: str) -> str:
     '''Returns URL content, caching response and tracking request.'''
     return requests.get(url).text
+
+
 
 
 if __name__ == "__main__":
