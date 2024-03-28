@@ -2,7 +2,7 @@
 '''using redis nosql storage'''
 import uuid
 import redis
-from typing import Union
+from typing import Callable, Union
 
 
 class Cache:
@@ -21,7 +21,20 @@ class Cache:
         self._redis.set(data_key, data)
         return data_key
 
-    def get(self, key: str) -> Union[str, bytes, None]:
-        '''Retrieves a value from Redis.
+    def get(self, key: str, fn: Callable = None) -> Union[str, bytes, None]:
+        '''Retrieves a value from Redis and optionally applies a conversion function.
         '''
-        return self._redis.get(key)
+        value = self._redis.get(key)
+        if value is not None and fn is not None:
+            return fn(value)
+        return value
+
+    def get_str(self, key: str) -> str:
+        '''Retrieves a string value from Redis.
+        '''
+        return self.get(key, fn=lambda x: x.decode('utf-8'))
+
+    def get_int(self, key: str) -> int:
+        '''Retrieves an integer value from Redis.
+        '''
+        return self.get(key, fn=lambda x: int(x))
