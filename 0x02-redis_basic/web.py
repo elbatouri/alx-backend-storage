@@ -32,3 +32,12 @@ def get_page(url: str) -> str:
     """
     response = requests.get(url)
     return response.text
+
+
+if __name__ == "__main__":
+    # Testing the implementation
+    url = "http://google.com"
+    print(get_page(url))  # This should fetch and cache the page from Google
+    print(get_page(url))  # This should retrieve the cached page
+    time.sleep(11)  # Let's wait for 11 seconds for the cache to expire
+    print(get_page(url))  # This should fetch the page again as cache is expired
